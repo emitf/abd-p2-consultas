@@ -120,7 +120,22 @@ C3 = [
 # recintos (número de recintos DISTINTOS en los que ha actuado). Ordenado por
 # actuaciones descendente y, a igualdad, por artista.
 C4 = [
-    # TODO
+    {"$unwind": "$artistas"},
+    {"$group": {
+            "_id": "$artistas",
+            "actuaciones": {"$sum": 1},
+            "recintos_distintos": {"$addToSet": "$recinto"}
+        }
+    },
+    {"$project": {
+            "_id": 0,
+            "artista": "$_id",
+            "actuaciones": 1,
+            "recintos": {"$size": "$recintos_distintos"}
+        }
+    },
+    {"$sort": {"actuaciones": -1, "artista": 1}},
+    {"$limit": 3}
 ]
 
 # ── C5 · Recintos a menos de 5 km de la Puerta del Sol ──────────────────────
