@@ -59,7 +59,26 @@ C2 = [
 # Devuelve, por cada mes: mes (formato "AAAA-MM"), ingresos redondeados a dos
 # decimales y eventos (número de eventos de ese mes). Ordenado por mes.
 C3 = [
-    # TODO
+    {"$project": {
+        "mes": {"$dateToString": {"format": "%Y-%m", "date": "$fecha"}},
+        "ingreso": {"$sum": {"$map": {
+            "input": "$precios_por_zona",
+            "as": "z",
+            "in": {"$multiply": ["$$z.precio", "$$z.vendidas"]},
+        }}},
+    }},
+    {"$group": {
+        "_id": "$mes",
+        "ingresos": {"$sum": "$ingreso"},
+        "eventos": {"$sum": 1},
+    }},
+    {"$project": {
+        "_id": 0,
+        "mes": "$_id",
+        "ingresos": {"$round": ["$ingresos", 2]},
+        "eventos": 1,
+    }},
+    {"$sort": {"mes": 1}},
 ]
 
 # ── C4 · Los tres artistas más programados ──────────────────────────────────
