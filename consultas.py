@@ -212,7 +212,27 @@ C6 = [
 # Devuelve, por franja: franja y eventos. Ordenado por eventos descendente y,
 # a igualdad, por franja.
 C7 = [
-    # TODO
+    {"$lookup": {
+        "from": "recinto",
+        "localField": "recinto",
+        "foreignField": "nombre",
+        "as": "r",
+    }},
+    {"$unwind": "$r"},
+    {"$set": {"ocupacion": {"$divide": ["$entradas_vendidas", "$r.aforo"]}}},
+    {"$group": {
+        "_id": {"$switch": {
+            "branches": [
+                {"case": {"$gte": ["$ocupacion", 0.99]}, "then": "agotado"},
+                {"case": {"$gte": ["$ocupacion", 0.85]}, "then": "alta"},
+                {"case": {"$gte": ["$ocupacion", 0.70]}, "then": "media"},
+            ],
+            "default": "baja",
+        }},
+        "eventos": {"$sum": 1},
+    }},
+    {"$project": {"_id": 0, "franja": "$_id", "eventos": 1}},
+    {"$sort": {"eventos": -1, "franja": 1}},
 ]
 
 # ── C8 · Informe materializado por recinto ──────────────────────────────────
