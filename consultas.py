@@ -144,7 +144,25 @@ C4 = [
 # Devuelve, por cada recinto: recinto, ciudad, distancia_km redondeada a dos
 # decimales, y eventos (número de eventos de ese recinto).
 C5 = [
-    # TODO
+    {"$geoNear": {
+        "near": {"type": "Point", "coordinates": [-3.7038, 40.4168]},
+        "distanceField": "distancia",
+        "maxDistance": 5000,
+        "spherical": True,
+    }},
+    {"$lookup": {
+        "from": "evento",
+        "localField": "nombre",
+        "foreignField": "recinto",
+        "as": "eventos",
+    }},
+    {"$project": {
+        "_id": 0,
+        "recinto": "$nombre",
+        "ciudad": 1,
+        "distancia_km": {"$round": [{"$divide": ["$distancia", 1000]}, 2]},
+        "eventos": {"$size": "$eventos"},
+    }},
 ]
 
 # ── C6 · Cartel completo de los eventos con varios artistas ─────────────────
