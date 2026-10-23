@@ -153,7 +153,38 @@ C5 = [
 # una lista con {nombre, pais, generos} de cada artista, ORDENADA por nombre.
 # Ordenado por titulo.
 C6 = [
-    # TODO
+    {"$match": {
+            "$expr": {
+                "$gt": [{"$size": "$artistas"}, 1]
+            }
+        }
+    },
+    {"$lookup": {
+            "from": "artista",
+            "localField": "artistas",
+            "foreignField": "nombre",
+            "pipeline": [
+                {"$sort": {"nombre": 1}},
+                {
+                    "$project": {
+                        "_id": 0,
+                        "nombre": 1,
+                        "pais": 1,
+                        "generos": 1
+                    }
+                }
+            ],
+            "as": "cartel"
+        }
+    },
+    {"$project": {
+            "_id": 0,
+            "titulo": 1,
+            "recinto": 1,
+            "cartel": 1
+        }
+    },
+    {"$sort": {"titulo": 1}}
 ]
 
 # ── C7 · Eventos por franja de ocupación ────────────────────────────────────
