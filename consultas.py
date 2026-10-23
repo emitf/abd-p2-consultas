@@ -223,7 +223,51 @@ C7 = [
 # reemplazarla, de modo que se conserven los campos que se le hayan añadido
 # por fuera.
 C8 = [
-    # TODO
+    {"$addFields": {
+            "ingreso_evento": {
+                "$sum": {
+                    "$map": {
+                        "input": "$precios_por_zona",
+                        "as": "zona",
+                        "in": {
+                            "$multiply": [
+                                "$$zona.precio",
+                                "$$zona.vendidas"
+                            ]
+                        }
+                    }
+                }
+            }
+        }
+    },
+    {"$group": {
+            "_id": "$recinto",
+            "ingresos": {"$sum": "$ingreso_evento"},
+            "eventos": {"$sum": 1}
+        }
+    },
+    {"$lookup": {
+            "from": "recinto",
+            "localField": "_id",
+            "foreignField": "nombre",
+            "as": "datos_recinto"
+        }
+    },
+    {"$unwind": "$datos_recinto"},
+    {"$project": {
+            "_id": 1,
+            "ingresos": {"$round": ["$ingresos", 2]},
+            "eventos": 1,
+            "aforo": "$datos_recinto.aforo"
+        }
+    },
+    {"$merge": {
+            "into": "informe_recintos",
+            "on": "_id",
+            "whenMatched": "merge",
+            "whenNotMatched": "insert"
+        }
+    }
 ]
 
 
